@@ -11,8 +11,14 @@
 #include <QVector3D>
 #include <GL/glu.h>
 #include <QQuaternion>
+#include <QImage>
+#include <QGLContext>
+#include <QOpenGLTexture>
+
+#include "object3d.h"
 
 #include "camera.h"
+#include "mainwindow.h"
 
 class RenderWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -21,38 +27,36 @@ public:
     explicit RenderWidget(QWidget *);
     ~RenderWidget();
 
+    bool lighting = false;
+    QVector3D lightPosition ();
+    void setLightPosition (const QVector3D & lightPosition);
+
+    void setCamera(Camera * camera);
+    void releaseCamera();
+
+    void setScene(Object3D * scene = nullptr);
+    void releaseScene();
+
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void resizeGL(int width, int height) Q_DECL_OVERRIDE;
     void paintGL() Q_DECL_OVERRIDE;
 
     void mousePressEvent(QMouseEvent * event);
-    void mouseMoveEvent(QMouseEvent * event);
-    void mouseReleaseEvent(QMouseEvent *);
-
-    void timerEvent(QTimerEvent *);
-
-private slots:
-    void setScale(int sliderPosition);
-    void setRotationSpeed(int sliderPosition);
-    void setFixedSpeed(bool fixed);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
 
 signals:
-    void speedChanged(int);
+    void mouseDownMoveSignal(QVector2D *);
 
 private:
-    QBasicTimer _timer;
-    const int fps = 60;
-
-    Camera _camera;
-
-    QVector3D _rotationAxis;
-    float _rotationSpeed;
-    QQuaternion _rotation;
-    bool _rotationFixed = false;
+    Camera * _camera = nullptr;
 
     bool _mousePressed = false;
     QPoint _lastPos = QPoint(0, 0);
+
+    Object3D * _scene = 0;
+    QVector3D _lightPosition;
 };
 
 #endif // OGLRENDER_H

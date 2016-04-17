@@ -155,12 +155,54 @@
          <rect>
           <x>360</x>
           <y>50</y>
-          <width>171</width>
+          <width>151</width>
           <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Зафиксировать скорость</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="freeCameraCheckBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>360</x>
+          <y>20</y>
+          <width>131</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Свободная камера</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="sceneLightingCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>500</x>
+          <y>20</y>
+          <width>131</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Освещение</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="openFileButton">
+        <property name="geometry">
+         <rect>
+          <x>520</x>
+          <y>50</y>
+          <width>91</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Открыть файл</string>
         </property>
        </widget>
       </widget>
@@ -188,6 +230,7 @@
    <header>renderwidget.h</header>
    <slots>
     <signal>speedChanged(int)</signal>
+    <signal>mouseDownMoveSignal(QVector2D*)</signal>
     <slot>setScale(int)</slot>
     <slot>setRotationSpeed(int)</slot>
     <slot>setFixedSpeed(bool)</slot>
@@ -197,68 +240,23 @@
  <resources/>
  <connections>
   <connection>
-   <sender>scaleSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>renderWidget</receiver>
-   <slot>setScale(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>48</x>
-     <y>402</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>102</x>
-     <y>287</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rotationSpeedSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>renderWidget</receiver>
-   <slot>setRotationSpeed(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>241</x>
-     <y>394</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>278</x>
-     <y>290</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rotationSpeedCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>renderWidget</receiver>
-   <slot>setFixedSpeed(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>412</x>
-     <y>399</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>434</x>
-     <y>323</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>renderWidget</sender>
-   <signal>speedChanged(int)</signal>
-   <receiver>rotationSpeedSlider</receiver>
-   <slot>setValue(int)</slot>
+   <signal>mouseDownMoveSignal(QVector2D*)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>parseRenderWidgetMouseMoveEvent(QVector2D*)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>333</x>
-     <y>305</y>
+     <x>565</x>
+     <y>246</y>
     </hint>
     <hint type="destinationlabel">
-     <x>323</x>
-     <y>397</y>
+     <x>584</x>
+     <y>429</y>
     </hint>
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>parseRenderWidgetMouseMoveEvent(QVector2D*)</slot>
+ </slots>
 </ui>

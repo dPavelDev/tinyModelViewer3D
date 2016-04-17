@@ -18,15 +18,20 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     renderwidget.cpp \
-    camera.cpp
+    camera.cpp \
+    object3d.cpp \
+    material.cpp
 
 HEADERS  += mainwindow.h \
     renderwidget.h \
-    camera.h
+    camera.h \
+    object3d.h \
+    material.h
 
 FORMS    += mainwindow.ui
 
-RESOURCES +=
+RESOURCES += \
+    res.qrc
 
 unix {
     LIBS += -lGLU

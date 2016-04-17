@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "renderwidget.h"
 
 #include <QApplication>
 
@@ -10,6 +9,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    return a.exec();
+    w._timer.start(1000.0 / w.fps, &w); // start redraw timer
 
+    return a.exec();
 }

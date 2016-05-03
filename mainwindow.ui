@@ -6,12 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>450</height>
+    <width>800</width>
+    <height>547</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>tinyModelViewer3D</string>
+  </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="enabled">
@@ -25,8 +28,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>640</width>
-     <height>400</height>
+     <width>800</width>
+     <height>500</height>
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -59,13 +62,13 @@
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>80</height>
+         <height>100</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
          <width>16777215</width>
-         <height>80</height>
+         <height>100</height>
         </size>
        </property>
        <property name="title">
@@ -75,7 +78,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>50</y>
+          <y>60</y>
           <width>100</width>
           <height>22</height>
          </rect>
@@ -92,47 +95,56 @@
         <property name="sliderPosition">
          <number>100</number>
         </property>
+        <property name="tracking">
+         <bool>true</bool>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="invertedAppearance">
+         <bool>false</bool>
+        </property>
+        <property name="invertedControls">
+         <bool>false</bool>
         </property>
        </widget>
        <widget class="QLabel" name="scaleLabel">
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>20</y>
-          <width>61</width>
+          <y>30</y>
+          <width>101</width>
           <height>20</height>
          </rect>
         </property>
         <property name="text">
-         <string>Масштаб:</string>
+         <string>Размер:</string>
         </property>
        </widget>
        <widget class="QLabel" name="rotationSpeedLabel">
         <property name="geometry">
          <rect>
           <x>140</x>
-          <y>20</y>
+          <y>30</y>
           <width>221</width>
           <height>20</height>
          </rect>
         </property>
         <property name="text">
-         <string>Скорость вращения (градусов в секунду):</string>
+         <string>Чувствительность мыши:</string>
         </property>
        </widget>
-       <widget class="QSlider" name="rotationSpeedSlider">
+       <widget class="QSlider" name="mouseSensivitySlider">
         <property name="geometry">
          <rect>
           <x>140</x>
-          <y>50</y>
+          <y>60</y>
           <width>201</width>
           <height>22</height>
          </rect>
         </property>
         <property name="maximum">
-         <number>359</number>
+         <number>500</number>
         </property>
         <property name="singleStep">
          <number>1</number>
@@ -150,40 +162,33 @@
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
-       <widget class="QCheckBox" name="rotationSpeedCheckBox">
-        <property name="geometry">
-         <rect>
-          <x>360</x>
-          <y>50</y>
-          <width>151</width>
-          <height>17</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Зафиксировать скорость</string>
-        </property>
-       </widget>
        <widget class="QCheckBox" name="freeCameraCheckBox">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="geometry">
          <rect>
           <x>360</x>
-          <y>20</y>
-          <width>131</width>
+          <y>30</y>
+          <width>161</width>
           <height>17</height>
          </rect>
         </property>
         <property name="text">
          <string>Свободная камера</string>
         </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
        </widget>
        <widget class="QCheckBox" name="sceneLightingCheckBox">
         <property name="geometry">
          <rect>
-          <x>500</x>
-          <y>20</y>
+          <x>620</x>
+          <y>60</y>
           <width>131</width>
           <height>17</height>
          </rect>
@@ -195,14 +200,40 @@
        <widget class="QPushButton" name="openFileButton">
         <property name="geometry">
          <rect>
-          <x>520</x>
-          <y>50</y>
-          <width>91</width>
+          <x>660</x>
+          <y>30</y>
+          <width>111</width>
           <height>23</height>
          </rect>
         </property>
         <property name="text">
          <string>Открыть файл</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="alignCameraCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>360</x>
+          <y>60</y>
+          <width>241</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Автовыравнивание камеры</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="changeBackgroundColorButton">
+        <property name="geometry">
+         <rect>
+          <x>530</x>
+          <y>30</y>
+          <width>111</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Сменить фон</string>
         </property>
        </widget>
       </widget>
@@ -215,12 +246,24 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>640</width>
-     <height>21</height>
+     <width>800</width>
+     <height>25</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="aboutProgramAction"/>
+   </widget>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="aboutProgramAction">
+   <property name="text">
+    <string>О программе</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -238,24 +281,7 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>renderWidget</sender>
-   <signal>mouseDownMoveSignal(QVector2D*)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>parseRenderWidgetMouseMoveEvent(QVector2D*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>565</x>
-     <y>246</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>584</x>
-     <y>429</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>parseRenderWidgetMouseMoveEvent(QVector2D*)</slot>
  </slots>

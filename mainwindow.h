@@ -1,52 +1,75 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 #include <QMainWindow>
 #include <QBasicTimer>
-#include <QMessageBox>
-#include <QFileDialog>
 
-#include <QOpenGLWidget>
-
-#include "object3d.h"
-
+#include "scene.h"
 #include "camera.h"
+#include "AboutWindow.h"
 
-namespace Ui {
-class MainWindow;
+#include <QKeyEvent>
+
+namespace Ui
+{
+	class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    QBasicTimer _timer;
-    const int fps = 60;
+	explicit MainWindow(QWidget* parent = nullptr);
+	~MainWindow();
 
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+	void keyPressEvent(QKeyEvent* event) Q_DECL_OVERRIDE;
+	void keyReleaseEvent(QKeyEvent* eve) Q_DECL_OVERRIDE;
+    void timerEvent(QTimerEvent*) Q_DECL_OVERRIDE;
 
-    void keyPressEvent(QKeyEvent *);
-    void keyReleaseEvent(QKeyEvent *);
-
-    void timerEvent(QTimerEvent *);
 private slots:
-    void setScale(int sliderPosition);
-    void setRotationSpeed(int sliderPosition);
-    void setFixedSpeed(bool fixed);
-    void setLighting(bool lighting);
+	void setScale(int sliderPosition) const;
+	void setRotationSpeed(int sliderPosition) const;
+    void setFixedSpeed(bool isFixedSpeed) const;
+	void setLighting(bool lighting) const;
+    void setCameraMode(bool isFreeCamera) const;
+    void setAlignedCameraView(bool isAlignedMode);
 
-    void openFileDialog(bool);
+	void openFileDialog(bool);
 
-    //void parseRenderWidgetMousePressEvent(QEvent * e);
-    void parseRenderWidgetMouseMoveEvent(QVector2D *v);
-    //void parseRenderWidgetMouseReleaseEvent(QEvent * e);
+    void parseRenderWidgetMousePressEvent(QMouseEvent * e);
+    void parseRenderWidgetMouseMoveEvent(QMouseEvent* v);
+    void parseRenderWidgetMouseReleaseEvent(QMouseEvent *);
 
+    void setMouseSensivity(int value);
+
+    void on_aboutProgramAction_triggered();
+    void on_changeBackgroundColorButton_clicked();
+    void initializeWindow();
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow* ui;
+    QBasicTimer _timer;
 
-    Camera * _camera;
+    AboutWindow * aboutwindow = nullptr;
+    Camera* _camera = nullptr;
+
+    QSet<int> _pressedKeys;
+    bool _moveCamera();
+
+    QVector2D _currentMousePos, _currentMousePosDelta;
+    bool _isActiveRotate = false;
+    float _mouseSensivity = 0;
+    float _keyboardSensevity = 0;
+    bool _isAlignedMode = false;
+
+    void _cleanup();
+    void _updateTitle();
 };
 
 #endif // MAINWINDOW_H
+
+

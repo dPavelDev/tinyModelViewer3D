@@ -19,21 +19,21 @@
 
 ### Компиляция (на примере Ubuntu):
 
-1) Установим необходимые зависимости:
+####1) Установим необходимые зависимости:
 	sudo apt-get install qt5-default
 	sudo apt-get install qt5-image-formats-plugins
 	sudo apt-get install libgl1-mesa-dev 
 	sudo apt-get install libglu1-mesa-dev 
 	
-2) Скопируем необходимые исходные файлы:
+####2) Скопируем необходимые исходные файлы:
 	git clone https://github.com/dPavelDev/tinyModelViewer3D
 	cd tinyModelViewer3D
 
-3) Скомпилируем:
+####3) Скомпилируем:
 	qmake
 	make -j8
 	
-4) Удалим лишние файлы:
+####4) Удалим лишние файлы:
 	make clean
 
 

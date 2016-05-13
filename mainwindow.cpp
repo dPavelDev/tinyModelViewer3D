@@ -1,298 +1,400 @@
+#include "LoadObjectStatusDialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QFileDialog>
 #include <ctime>
 #include <QColorDialog>
-#include <LoadObjectStatusDialog.h>
-
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget* parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+	ui->setupUi(this);
 
-    ui->statusBar->showMessage("Инициализация...");
-    connect(ui->renderWidget, SIGNAL(initialized()), this, SLOT(initializeWindow()));
+	ui->statusBar->showMessage("Инициализация...");
+	connect(ui->renderWidget, SIGNAL(initialized()), this, SLOT(initializeWindow()));
 }
 
 MainWindow::~MainWindow()
 {
-    _cleanup();
+	_cleanup();
 }
 
 void MainWindow::timerEvent(QTimerEvent*)
 {
-    if(_moveCamera())
-        ui->renderWidget->update();
+	if (_moveCamera())
+	{
+        ui->renderWidget->updateLater();
+	}
 
-    _updateTitle();
+	_updateTitle();
 }
 
 
 void MainWindow::setScale(int sliderPosition) const
 {
-    if (ui->renderWidget->getScene() == nullptr)
-        return;
+	auto scene = ui->renderWidget->getScene();
+	auto camera = ui->renderWidget->getCamera();
 
-    float maxDim = ui->renderWidget->getScene()->boundingBox().max_dim();
+	if (scene == nullptr || camera == nullptr)
+		return;
 
-    float dst = maxDim / 2 / tan(_camera->fovy() / 2);
-    float minScale = 0.125, maxScale = 8;
+	float maxDim = scene->boundingBox().max_dim();
 
-    dst = dst * (maxScale + 1) - (dst * (maxScale + 1) - dst * minScale) * sliderPosition / 100.0f;
+	float dst = maxDim / 2 / tan(camera->fovy() / 2);
+    float minScale = 0.125, maxScale = 4;
 
-    QVector3D newEyePos = _camera->center() - _camera->dir() * dst;
+	dst = dst * (maxScale + 1) - (dst * (maxScale + 1) - dst * minScale) * sliderPosition / 100.0f;
 
-    _camera->setEye(newEyePos);
+	QVector3D newEyePos = camera->center() - camera->dir() * dst;
 
-	ui->renderWidget->update();
+	camera->setEye(newEyePos);
+
+    ui->renderWidget->updateLater();
 }
 
 
 void MainWindow::setRotationSpeed(int sliderPosition) const
 {
-	if (fabs(_camera->rotationSpeed() - sliderPosition) < 1)
+	auto camera = ui->renderWidget->getCamera();
+
+	if (camera == nullptr)
 		return;
 
-	_camera->setRotationSpeed(sliderPosition);
-	ui->renderWidget->update();
+	if (fabs(camera->rotationSpeed() - sliderPosition) < 1)
+		return;
+
+	camera->setRotationSpeed(sliderPosition);
+    ui->renderWidget->updateLater();
 }
 
 void MainWindow::setFixedSpeed(bool isFixedSpeed) const
 {
-    _camera->setRotationSpeedFixed(isFixedSpeed);
+	auto camera = ui->renderWidget->getCamera();
 
-	ui->renderWidget->update();
+	if (camera == nullptr)
+		return;
+
+
+	camera->setRotationSpeedFixed(isFixedSpeed);
+
+    ui->renderWidget->updateLater();
 }
 
-void MainWindow::setLighting(bool lighting) const
+void MainWindow::setLighting(bool isLighting) const
 {
-	ui->renderWidget->lighting = lighting;
-	ui->renderWidget->update();
+	ui->renderWidget->setLighting(isLighting);
+    ui->renderWidget->updateLater();
 }
 
 void MainWindow::setCameraMode(bool isFreeCamera) const
 {
-    _camera->setFixedCenter(!isFreeCamera);
+	auto camera = ui->renderWidget->getCamera();
+	auto scene = ui->renderWidget->getScene();
 
-    if (_camera->isFixedCenter())
-        _camera->setCenter(ui->renderWidget->getScene()->boundingBox().center());
+	if (camera == nullptr || scene == nullptr)
+		return;
 
-    ui->scaleSlider->setDisabled(isFreeCamera);
-    ui->renderWidget->update();
+	camera->setFixedCenter(!isFreeCamera);
+
+	if (camera->isFixedCenter())
+		camera->setCenter(scene->boundingBox().center());
+
+	ui->scaleSlider->setDisabled(isFreeCamera);
+    ui->renderWidget->updateLater();
 }
 
 void MainWindow::setAlignedCameraView(bool isAlignedMode)
 {
-    _isAlignedMode = isAlignedMode;
-    if (isAlignedMode)
-        _camera->alignUp();
+	auto camera = ui->renderWidget->getCamera();
 
-    ui->renderWidget->update();
+	if (camera == nullptr)
+		return;
+
+	_isAlignedMode = isAlignedMode;
+	if (isAlignedMode)
+		camera->alignUp();
+
+    ui->renderWidget->updateLater();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    _pressedKeys.insert(event->key());
+	if (_pressedKeys.contains(event->key()))
+		return;
 
-    bool isMove = false;
-    isMove |= _pressedKeys.contains(Qt::Key_W);
-    isMove |= _pressedKeys.contains(Qt::Key_A);
-    isMove |= _pressedKeys.contains(Qt::Key_S);
-    isMove |= _pressedKeys.contains(Qt::Key_D);
+	_pressedKeys.insert(event->key());
 
-    if (isMove) {
-        ui->freeCameraCheckBox->setChecked(true);
-    }
+	bool isMove = false;
+	isMove |= _pressedKeys.contains(Qt::Key_W);
+	isMove |= _pressedKeys.contains(Qt::Key_A);
+	isMove |= _pressedKeys.contains(Qt::Key_S);
+	isMove |= _pressedKeys.contains(Qt::Key_D);
+
+	if (isMove && ui->freeCameraCheckBox->checkState() == Qt::Unchecked)
+	{
+		ui->freeCameraCheckBox->setChecked(true);
+	}
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    _pressedKeys.remove(event->key()); // return false if not found
+	_pressedKeys.remove(event->key()); // return false if not found
 }
 
-void MainWindow::parseRenderWidgetMouseMoveEvent(QMouseEvent *v)
+void MainWindow::parseRenderWidgetMouseMoveEvent(QMouseEvent* v)
 {
-    if (!_isActiveRotate)
-        return;
+	if (!_isActiveRotate)
+		return;
 
-    _currentMousePosDelta = QVector2D(v->pos()) - _currentMousePos;
-    _currentMousePos = QVector2D(v->pos());
+	auto camera = ui->renderWidget->getCamera();
 
-    QVector3D axis = -(_camera->right() * _currentMousePosDelta.y() + _camera->up() * _currentMousePosDelta.x());
-    float speed = axis.length() * _mouseSensivity;
+	if (camera == nullptr)
+		return;
 
-	_camera->rotate(QQuaternion::fromAxisAndAngle(axis, speed));
+	_currentMousePosDelta = QVector2D(v->pos()) - _currentMousePos;
+	_currentMousePos = QVector2D(v->pos());
 
-    if (_isAlignedMode)
-        _camera->alignUp();
+	QVector3D axis = -(camera->right() * _currentMousePosDelta.y() + camera->up() * _currentMousePosDelta.x());
+	float speed = axis.length() * _mouseSensivity;
 
-    ui->renderWidget->update();
+	camera->rotate(QQuaternion::fromAxisAndAngle(axis, speed));
+
+	if (_isAlignedMode)
+		camera->alignUp();
+
+    ui->renderWidget->updateLater();
 }
 
-
-void MainWindow::parseRenderWidgetMousePressEvent(QMouseEvent *e)
+void MainWindow::parseRenderWidgetMousePressEvent(QMouseEvent* e)
 {
 	_currentMousePos = QVector2D(e->pos());
 	_currentMousePosDelta = QVector2D(0, 0);
 
-    _isActiveRotate = 1;
+	_isActiveRotate = 1;
 }
 
-void MainWindow::parseRenderWidgetMouseReleaseEvent(QMouseEvent *)
+void MainWindow::parseRenderWidgetMouseReleaseEvent(QMouseEvent*)
 {
-    _isActiveRotate = 0;
+	_isActiveRotate = 0;
 }
 
 void MainWindow::setMouseSensivity(int value)
 {
-    _mouseSensivity = value / 50.0f;
+    if (value == 0)
+        value = 1;
+
+    _mouseSensivity = value * value / 5000.0f;
+}
+
+void MainWindow::setKeyboardSensivity(int value)
+{
+    if (value == 0)
+        value = 1;
+
+    _keyboardSensevity = value * value / 10000.0f;
 }
 
 bool MainWindow::_moveCamera()
 {
-    auto step = ui->renderWidget->getScene()->boundingBox().max_dim() / 100.f;
+	auto scene = ui->renderWidget->getScene();
+	auto camera = ui->renderWidget->getCamera();
 
-    bool isMoved = false;
+	if (scene == nullptr || camera == nullptr)
+		return false;
 
-    if (_pressedKeys.contains(Qt::Key_W))
+    auto step = scene->boundingBox().max_dim() * _keyboardSensevity;
+
+	bool isMoved = false;
+
+    float max_dist = 7 * scene->boundingBox().max_dim();
+
+	if (_pressedKeys.contains(Qt::Key_W))
 	{
-		_camera->moveForward(step);
-        isMoved = true;
+		camera->moveForward(step);
+
+        if ( camera->eye().distanceToPoint(scene->boundingBox().center()) > max_dist )
+            camera->moveForward(-step);
+		isMoved = true;
 	}
-    if (_pressedKeys.contains(Qt::Key_S))
+	if (_pressedKeys.contains(Qt::Key_S))
 	{
-		_camera->moveBackward(step);
-        isMoved = true;
+		camera->moveBackward(step);
+
+        if ( camera->eye().distanceToPoint(scene->boundingBox().center()) > max_dist )
+            camera->moveBackward(-step);
+		isMoved = true;
 	}
-    if (_pressedKeys.contains(Qt::Key_A))
+	if (_pressedKeys.contains(Qt::Key_A))
 	{
-		_camera->moveLeft(step);
-        isMoved = true;
+		camera->moveLeft(step);
+
+        if ( camera->eye().distanceToPoint(scene->boundingBox().center()) > max_dist )
+            camera->moveLeft(-step);
+		isMoved = true;
 	}
-    if (_pressedKeys.contains(Qt::Key_D))
+	if (_pressedKeys.contains(Qt::Key_D))
 	{
-		_camera->moveRight(step);
-        isMoved = true;
+		camera->moveRight(step);
+
+        if ( camera->eye().distanceToPoint(scene->boundingBox().center()) > max_dist )
+            camera->moveRight(-step);
+		isMoved = true;
 	}
 
-    return isMoved;
+    scene->setLightPos(camera->eye());
+
+	return isMoved;
 }
 
 void MainWindow::_cleanup()
 {
-    delete ui;
-    delete _camera;
+	delete ui;
 }
 
 void MainWindow::_updateTitle()
 {
-    static int t = time(nullptr);
-    int currentTime = time(nullptr);
-    static int lastFrameCount = 0;
+	static int t = time(nullptr);
+	int currentTime = time(nullptr);
+	static int lastFrameCount = 0;
 
-    if (t == currentTime)
-        return;
+	if (t == currentTime)
+		return;
 
-    int newFrameCount = ui->renderWidget->getFrameCount();
-    setWindowTitle(QString::asprintf("FPS: %d - tinyModelViewer3D", newFrameCount - lastFrameCount));
-    t = currentTime;
-    lastFrameCount = newFrameCount;
+	int newFrameCount = ui->renderWidget->getFrameCount();
+	setWindowTitle(QString("FPS: %1 - tinyModelViewer3D").arg(newFrameCount - lastFrameCount));
+	t = currentTime;
+	lastFrameCount = newFrameCount;
 }
 
 void MainWindow::openFileDialog(bool)
 {
     ui->renderWidget->pauseTimer();
 
-    auto path = QFileDialog::getOpenFileName(this, "Open model", "", "Obj files (*.obj);;All files (*.*)");
+	auto path = QFileDialog::getOpenFileName(this, "Open model", "", "Obj files (*.obj);;All files (*.*)");
 
-    if (path == "")
-        return;
+	if (path != "")
+	{
+        Scene* scene = nullptr;
 
-    ui->renderWidget->releaseScene();
+        LoadObjectStatusDialog* dlg = new LoadObjectStatusDialog(this, &scene, path);
+		dlg->exec();
+		delete dlg;
 
-    auto scene = new Scene(path);
-    _camera->setCenter(scene->boundingBox().center());
-    _camera->setEye(scene->boundingBox().maxPoint());
-    _camera->setUp(QVector3D(0, 1, 0));
+        bool isLoaded = scene != nullptr;
 
-    _camera->setzFar(scene->boundingBox().max_dim() * 100);
-    _camera->setzNear(_camera->zFar() / (1 << 16));
+        if (isLoaded)
+		{
+			delete ui->renderWidget->getScene();
 
-    ui->renderWidget->updateView();
-    ui->renderWidget->setScene(scene);
+            ui->renderWidget->setScene(scene);
 
-    ui->scaleSlider->setValue(0);
-    ui->scaleSlider->setValue(70);
-	ui->renderWidget->update();
-    ui->renderWidget->resumeTimer();
+			auto camera = ui->renderWidget->getCamera();
+
+			camera->setCenter(scene->boundingBox().center());
+			camera->setEye(scene->boundingBox().maxPoint());
+			camera->setUp(QVector3D(0, 1, 0));
+
+            camera->setzFar(scene->boundingBox().max_dim() * 10);
+            camera->setzNear(camera->zFar() / (1 << 12));
+
+            scene->setLightPos(camera->eye());
+
+			ui->renderWidget->updateView();
+
+
+			ui->scaleSlider->setValue(0);
+			ui->scaleSlider->setValue(70);
+		}
+		else
+		{
+            QMessageBox::warning(this, "Внимание!", QString("Файл не загружен: %1").arg(path));
+		}
+	}
+	ui->renderWidget->resumeTimer();
+    ui->renderWidget->updateLater();
 }
 
 
 void MainWindow::on_aboutProgramAction_triggered()
 {
-    if (aboutwindow != nullptr)
-        delete aboutwindow;
+    QFile aboutText(":/html/about.html");
+    aboutText.open(QFile::ReadOnly);
 
-    aboutwindow = new AboutWindow(this);
-    aboutwindow->show();
+    QMessageBox::about(this, tr("О программе"), tr(aboutText.readAll())	);
 }
 
 void MainWindow::on_changeBackgroundColorButton_clicked()
 {
-    ui->renderWidget->pauseTimer();
+	ui->renderWidget->pauseTimer();
 
-    auto color = QColorDialog::getColor(this->palette().background().color(), this, tr("Выберите цвет фона"));
-    if (color.isValid())
-        ui->renderWidget->setBackgroundColor(color);
+	auto color = QColorDialog::getColor(this->palette().background().color(), this, "Выберите цвет фона");
+	if (color.isValid())
+		ui->renderWidget->setBackgroundColor(color);
 
-    ui->renderWidget->update();
+    ui->renderWidget->updateLater();
 
-    ui->renderWidget->resumeTimer();
+	ui->renderWidget->resumeTimer();
 }
 
 void MainWindow::initializeWindow()
 {
-    connect(ui->scaleSlider, SIGNAL(valueChanged(int)), this, SLOT(setScale(int)));
-    connect(ui->sceneLightingCheckBox, SIGNAL(toggled(bool)), this, SLOT(setLighting(bool)));
-    connect(ui->freeCameraCheckBox, SIGNAL(toggled(bool)), this, SLOT(setCameraMode(bool)));
+	connect(ui->scaleSlider, SIGNAL(valueChanged(int)), this, SLOT(setScale(int)));
+	connect(ui->sceneLightingCheckBox, SIGNAL(toggled(bool)), this, SLOT(setLighting(bool)));
+	connect(ui->freeCameraCheckBox, SIGNAL(toggled(bool)), this, SLOT(setCameraMode(bool)));
 
-    connect(ui->openFileButton, SIGNAL(clicked(bool)), this, SLOT(openFileDialog(bool)));
-    connect(ui->alignCameraCheckBox, SIGNAL(toggled(bool)), this, SLOT(setAlignedCameraView(bool)));
+	connect(ui->openFileButton, SIGNAL(clicked(bool)), this, SLOT(openFileDialog(bool)));
+	connect(ui->alignCameraCheckBox, SIGNAL(toggled(bool)), this, SLOT(setAlignedCameraView(bool)));
 
-    connect(ui->renderWidget, SIGNAL(mousePressSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMousePressEvent(QMouseEvent*)));
-    connect(ui->renderWidget, SIGNAL(mouseMoveSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMouseMoveEvent(QMouseEvent*)));
-    connect(ui->renderWidget, SIGNAL(mouseReleaseSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMouseReleaseEvent(QMouseEvent*)));
+	connect(ui->renderWidget, SIGNAL(mousePressSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMousePressEvent(QMouseEvent*)));
+	connect(ui->renderWidget, SIGNAL(mouseMoveSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMouseMoveEvent(QMouseEvent*)));
+	connect(ui->renderWidget, SIGNAL(mouseReleaseSignal(QMouseEvent*)), this, SLOT(parseRenderWidgetMouseReleaseEvent(QMouseEvent*)));
 
-    connect(ui->mouseSensivitySlider, SIGNAL(valueChanged(int)), this, SLOT(setMouseSensivity(int)));
+	connect(ui->mouseSensivitySlider, SIGNAL(valueChanged(int)), this, SLOT(setMouseSensivity(int)));
+    connect(ui->keyboardSensivitySlider, SIGNAL(valueChanged(int)), this, SLOT(setKeyboardSensivity(int)));
 
+	auto scene = new Scene(); // set default model
+	scene->genCube();
+	ui->renderWidget->setScene(scene);
 
-    _camera = new Camera(
-        QVector3D(0, 0, 1), // eye
-        QVector3D(0, 0, 0), // center
-        QVector3D(0, 1, 0), // up
+	setDefaultSettings();
 
-        45.f, // viewing angle
-        0.01f, // zNear plane
-        100.f // zFar plane
-    );
+    ui->renderWidget->startTimer(60);
+    _timer.start(10, Qt::CoarseTimer, this);
 
-    _camera->setRotationSpeed(0); // in degrees
-    _camera->setRotationAxis(_camera->up());
-    ui->renderWidget->setCamera(_camera);
-
-    ui->alignCameraCheckBox->setCheckState(Qt::Checked);
-
-    ui->scaleSlider->setValue(70); // set default scale
-    ui->mouseSensivitySlider->setValue(50);
-    ui->freeCameraCheckBox->setCheckState(Qt::Unchecked);
-    ui->sceneLightingCheckBox->setCheckState(Qt::Unchecked);
-
-
-    //ui->renderWidget->startTimer(1);
-    _timer.start(15, Qt::PreciseTimer, this);
-
-    ui->statusBar->showMessage("Поворот модели левой кнопкой мыши + перемещение");
+	ui->statusBar->showMessage("Поворот модели левой кнопкой мыши + перемещение");
 }
+
+void MainWindow::setDefaultSettings()
+{
+	auto camera = new Camera(
+		QVector3D(0, 0, 1), // eye
+		QVector3D(0, 0, 0), // center
+		QVector3D(0, 1, 0), // up
+
+		45.f // viewing angle
+	);
+
+	auto scene = ui->renderWidget->getScene();
+
+    camera->setzFar(scene->boundingBox().max_dim() * 10);
+	camera->setzNear(camera->zFar() / (1 << 16));
+
+	camera->setRotationSpeed(0); // in degrees
+	camera->setRotationAxis(camera->up());
+
+	if (ui->renderWidget->getCamera() != nullptr)
+		delete ui->renderWidget->getCamera();
+	ui->renderWidget->setCamera(camera);
+
+	ui->alignCameraCheckBox->setCheckState(Qt::Checked);
+
+	ui->scaleSlider->setValue(70); // set default scale
+    ui->mouseSensivitySlider->setValue(20);
+    ui->keyboardSensivitySlider->setValue(20);
+	ui->freeCameraCheckBox->setCheckState(Qt::Unchecked);
+	ui->sceneLightingCheckBox->setCheckState(Qt::Unchecked);
+}
+

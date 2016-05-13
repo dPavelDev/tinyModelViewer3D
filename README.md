@@ -17,8 +17,32 @@
 
 4) Поддерживаемые системы: Windows (32-bit, 64-bit), Linux
 
+### Компиляция (на примере Ubuntu):
+
+1) Установим необходимые зависимости:
+	sudo apt-get install qt5-default
+	sudo apt-get install qt5-image-formats-plugins
+	sudo apt-get install libgl1-mesa-dev 
+	sudo apt-get install libglu1-mesa-dev 
+	
+2) Скопируем необходимые исходные файлы:
+	git clone https://github.com/dPavelDev/tinyModelViewer3D
+	cd tinyModelViewer3D
+
+3) Скомпилируем:
+	qmake
+	make -j8
+	
+4) Удалим лишние файлы:
+	make clean
+
 
 ### История изменений:
+
+#### 13.05.2016
+	1) Добавлен прогресс загрузки модели с подробной статистикой
+	2) Доработана функция освещения: если полигоны не содержат нормалей, то программа их автоматически добавит.
+	3) Значительно оптимизирован рендер путем использования VBO
 
 #### 04.05.2016
 	1) Добавлена поддержка компилятора MSVC

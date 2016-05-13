@@ -5,13 +5,10 @@
 #include <QtCore/QDir>
 #include "ShapeGroup.h"
 
-#include <QtDebug>
-#include <ctime>
-
 const QMap<QString, Scene::OBJ_ENUM> Scene::objTokensContainer =
 {
-	{ "#", OBJ_COMMENT },
-	{ "call", OBJ_CALL},
+	{"#", OBJ_COMMENT},
+	{"call", OBJ_CALL},
 	{"csh", OBJ_CSH},
 
 	{"v", OBJ_VERTEX},
@@ -46,25 +43,25 @@ const QMap<QString, Scene::OBJ_ENUM> Scene::objTokensContainer =
 	{"o", OBJ_OBJECT},
 
 	// render attributes
-	{ "bevel", OBJ_BEVEL},
-	{ "c_interp", OBJ_COLOR_INTERPOLATION },
-	{ "d_interp", OBJ_DISSOLVE_INTERPOLATION },
-	{ "lod", OBJ_LOD },
-	{ "maplib",OBJ_MAPLIB },
-	{ "usemap",OBJ_USEMAP },
-	{ "usemtl",OBJ_USEMTL },
-	{ "mtllib",OBJ_MTLLIB },
-	{ "shadow_obj",OBJ_SHADOW_OBJ },
-	{ "trace_obj",OBJ_TRACE_OBJ },
-	{ "ctech",OBJ_CTECH },
-	{ "stech",OBJ_STECH },
+	{"bevel", OBJ_BEVEL},
+	{"c_interp", OBJ_COLOR_INTERPOLATION},
+	{"d_interp", OBJ_DISSOLVE_INTERPOLATION},
+	{"lod", OBJ_LOD},
+	{"maplib",OBJ_MAPLIB},
+	{"usemap",OBJ_USEMAP},
+	{"usemtl",OBJ_USEMTL},
+	{"mtllib",OBJ_MTLLIB},
+	{"shadow_obj",OBJ_SHADOW_OBJ},
+	{"trace_obj",OBJ_TRACE_OBJ},
+	{"ctech",OBJ_CTECH},
+	{"stech",OBJ_STECH},
 
 	// B-spline
 	{"bsp", OBJ_BSP},
-	{ "bzp", OBJ_BZP},
-	{ "cdc", OBJ_CDC},
-	{ "cdp", OBJ_CDP},
-	{ "res", OBJ_RES}
+	{"bzp", OBJ_BZP},
+	{"cdc", OBJ_CDC},
+	{"cdp", OBJ_CDP},
+	{"res", OBJ_RES}
 };
 
 const QMap<QString, Scene::MTL_ENUM> Scene::mtlTokensContainer =
@@ -109,98 +106,97 @@ Scene::Scene(const QString& path)
 	this->loadObj(path);
 }
 
-bool Scene::loadMaterialLibrary(const QString& path)
+bool Scene::loadMaterialLibrary(const QString& path, SceneStat* sceneStat)
 {
 	QFile file(path);
 
 	if (!file.open(QFile::ReadOnly | QFile::Text))
 	{
-        return false;
+		return false;
 	}
 
 	QTextStream tin(&file);
-	ShapeGroup* currentShapeGroup = &shapeGroups.front();
-	Material* currentMaterial = &currentShapeGroup->material;
+	ShapeGroup* currentShapeGroup = getShapeGroup(""); // get shape group without material
 
-    int k = 0; // current line
 	while (!tin.atEnd())
 	{
+        if (sceneStat->isCanceled())
+            return false;
+
 		QString line = tin.readLine();
 
-		++k;
-
-        QVector<QStringRef> w = line.splitRef(QRegExp("(\\s)"), QString::SkipEmptyParts);
-		//QVector<QStringRef> w = line.splitRef(" ", QString::SkipEmptyParts);
-
+		auto w = stringSplitBySpace(line);
 		if (w.empty())
-            continue;
+			continue;
 
-        auto token = getMtlTokenByKeyword(w[0].toString());
+		auto token = getMtlTokenByKeyword(w[0].toString());
 		switch (token)
 		{
 		case MTL_COMMENT:
 			break;
 		case MTL_NEWMTL:
-            if (materialNames.find(w[1].toString()) != materialNames.end()) // if material is already added
-			{
-				throw;
-			}
+            if (w.size() <= 1)
+                break;
 
-            materialNames[w[1].toString()] = ++lastMaterialName;
-			shapeGroups.push_back(ShapeGroup());
-			if (lastMaterialName != shapeGroups.size() - 1)
-			{
-				throw;
-			}
+			sceneStat->incMaterialsCount();
+			addShapeGroup(w[1].toString());
 
-			currentShapeGroup = &shapeGroups.back();
-			currentMaterial = &currentShapeGroup->material;
+			currentShapeGroup = getShapeGroup(w[1].toString());
 			break;
 		case MTL_AMBIENT_COLOR:
 		case MTL_DIFFUSE_COLOR:
 		case MTL_SPECULAR_COLOR:
 		case MTL_EMISSION_COLOR:
 		case MTL_TRANSMISSION_FILTER:
-		{
-            QColor color;
+			{
+                if (w.size() <= 1)
+                    break;
+                QColor color;
 
-			if (w[1] == "spectral")
-			{
-				qDebug() << "Spectral colors don't support";
-			}
-			else if (w[1] == "xyz") // CIE XYZ color
-			{
-				qDebug() << "CIE XYZ colors don't support";
-			}
-			else // rgb color
-			{
-				color.setRedF(w[1].toDouble());
-				color.setGreenF(w[2].toDouble());
-				color.setBlueF(w[3].toDouble());
-			}
 
-			switch (token)
-			{
-			case MTL_AMBIENT_COLOR:
-				currentMaterial->ambientColor = color;
-				break;
-			case MTL_DIFFUSE_COLOR:
-				currentMaterial->diffuseColor = color;
-				break;
-			case MTL_SPECULAR_COLOR:
-				currentMaterial->specularColor = color;
-				break;
-			case MTL_EMISSION_COLOR:
-				currentMaterial->emissionColor = color;
-				break;
-			case MTL_TRANSMISSION_FILTER:
-				currentMaterial->transmissionFilter = color;
-				break;
-			default:
-				qDebug() << QString("Error : ") << line;
-				break;
-			}			
-		}
+				if (w[1] == "spectral")
+				{
+//                    sceneStat->spectralColorDetected();
+//                    qDebug() << "Spectral colors don't support";
+				}
+				else if (w[1] == "xyz") // CIE XYZ color
+				{
+//                    sceneStat->cieXyzColorDetected();
+//                    qDebug() << "CIE XYZ colors don't support";
+				}
+				else // rgb color
+				{
+                    if (w.size() <= 1)
+                        break;
+
+					color.setRedF(w[1].toDouble());
+                    color.setGreenF( (w.size() > 2) ? w[2].toDouble() : color.red() );
+                    color.setBlueF ( (w.size() > 3) ? w[3].toDouble() : color.green() );
+				}
+
+				auto currentMaterial = &currentShapeGroup->material;
+
+				switch (token)
+				{
+				case MTL_AMBIENT_COLOR:
+					currentMaterial->ambientColor = color;
+					break;
+				case MTL_DIFFUSE_COLOR:
+					currentMaterial->diffuseColor = color;
+					break;
+				case MTL_SPECULAR_COLOR:
+					currentMaterial->specularColor = color;
+					break;
+				case MTL_EMISSION_COLOR:
+					currentMaterial->emissionColor = color;
+					break;
+				case MTL_TRANSMISSION_FILTER:
+					currentMaterial->transmissionFilter = color;
+					break;
+                default:
+                    break;
+				}
+			}
 			break;
 		case MTL_AMBIENT_TEXMAP:
 		case MTL_DIFFUSE_TEXMAP:
@@ -208,74 +204,126 @@ bool Scene::loadMaterialLibrary(const QString& path)
 		case MTL_EMISSION_TEXMAP:
 		case MTL_SPECULAR_EXPONENT_TEXMAP:
 		case MTL_DISSOLVE_TEXMAP:
-		case MTL_BUMP_TEXMAP: 
-		{
-			QFileInfo currentFile(path);
-            QDir dir = currentFile.absoluteDir();
-
-            QString pathToTexture = dir.absoluteFilePath(w.back().toString());
-            //qDebug() << pathToTexture;
-
-			switch (token)
+		case MTL_BUMP_TEXMAP:
 			{
-			case MTL_AMBIENT_TEXMAP:
-				currentMaterial->ambientTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_DIFFUSE_TEXMAP:
-				currentMaterial->diffuseTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_SPECULAR_TEXMAP:
-				currentMaterial->specularTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_SPECULAR_EXPONENT_TEXMAP:
-				currentMaterial->opticalDensityTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_DISSOLVE_TEXMAP:
-				currentMaterial->dissolveTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_EMISSION_TEXMAP:
-				currentMaterial->emissionTexture_id = this->loadTexture(pathToTexture);
-				break;
-			case MTL_BUMP_TEXMAP:
-				currentMaterial->bumpTexture_id = this->loadTexture(pathToTexture);
-				break;
-			default:
-				qDebug() << "Error : " << line; 	
-				break;
+                if (w.size() <= 1)
+                    break;
+
+                QFileInfo currentFile(path);
+				QDir dir = currentFile.absoluteDir();
+				QString pathToTexture = dir.absoluteFilePath(w.back().toString());
+                pathToTexture = pathToTexture.replace("\\", "/");
+
+
+				auto currentMaterial = &currentShapeGroup->material;
+
+                addTexture(pathToTexture);
+				switch (token)
+				{
+				case MTL_AMBIENT_TEXMAP:
+                    currentMaterial->ambientTexturePath = pathToTexture;
+					break;
+				case MTL_DIFFUSE_TEXMAP:
+                    currentMaterial->diffuseTexturePath = pathToTexture;
+					break;
+				case MTL_SPECULAR_TEXMAP:
+                    currentMaterial->specularTexturePath = pathToTexture;
+					break;
+				case MTL_SPECULAR_EXPONENT_TEXMAP:
+                    currentMaterial->specularTexturePath = pathToTexture;
+					break;
+				case MTL_DISSOLVE_TEXMAP:
+                    currentMaterial->dissolveTexturePath = pathToTexture;
+					break;
+				case MTL_EMISSION_TEXMAP:
+                    currentMaterial->emissionTexturePath = pathToTexture;
+					break;
+				case MTL_BUMP_TEXMAP:
+                    currentMaterial->bumpTexturePath = pathToTexture;
+					break;
+                default:
+                    break;
+
+                }
+
+                sceneStat->setTexturesCount(_getTexImageByPath.count());
 			}
-		}
 			break;
+
 		case MTL_OPTICAL_DENSITY:
-            currentMaterial->opticalDensity = w[1].toFloat();
+            if (w.size() <= 1)
+                break;
+
+			currentShapeGroup->material.opticalDensity = w[1].toFloat();
 			break;
 		case MTL_SPECULAR_EXPONENT:
-            currentMaterial->specularExponent = w[1].toFloat();
+            if (w.size() <= 1)
+                break;
+
+            currentShapeGroup->material.specularExponent = w[1].toFloat();
 			break;
 		case MTL_TRANSPERANT:
-			currentMaterial->transperancy = w[1].toFloat();
+            if (w.size() <= 1)
+                break;
+
+			currentShapeGroup->material.transperancy = w[1].toFloat();
 			break;
 		case MTL_DISSOLVE_FACTOR:
-			if (w[1] == "-halo") // dissolve = 1.0 - (n * v)(1.0 - factor)
-				currentMaterial->transperancy = 1.0 - w[2].toFloat();
-			else
-				currentMaterial->transperancy = 1.0 - w[1].toFloat();
+            if (w.size() <= 1)
+                break;
+
+            if (w[1] == "-halo") {// dissolve = 1.0 - (n * v)(1.0 - factor)
+                if (w.size() >= 2)
+                    currentShapeGroup->material.transperancy = 1.0 - w[2].toFloat();
+            }
+            else
+				currentShapeGroup->material.transperancy = 1.0 - w[1].toFloat();
+
 			break;
 		case MTL_SHARPNESS:
-            currentMaterial->sharpness = w[1].toFloat();
+            if (w.size() <= 1)
+                break;
+
+			currentShapeGroup->material.sharpness = w[1].toFloat();
 			break;
 		case MTL_ILLUMANATION_MODEL:
-			currentMaterial->illuminationMode = w[1].toInt();
+            if (w.size() <= 1)
+                break;
+
+            currentShapeGroup->material.illuminationMode = w[1].toInt();
 			break;
+
 		default:
-            qWarning() << "Warning: unresolved keyword " << w[0];
-			break;
+            break;
 		}
 	}
 
-	qInfo() << "Materials are loaded: " << materialNames.size() << " counts";
-
 	return true;
 }
+
+void Scene::initMaterials()
+{
+    for (ShapeGroup& shapeGroup : shapeGroups)
+    {
+        Material* material = &shapeGroup.material;
+
+        material->ambientTexture_id = _loadTexture(material->ambientTexturePath);
+        material->diffuseTexture_id = _loadTexture(material->diffuseTexturePath);
+        material->dissolveTexture_id = _loadTexture(material->dissolveTexturePath);
+        material->emissionTexture_id = _loadTexture(material->emissionTexturePath);
+        material->opticalDensityTexture_id = _loadTexture(material->opticalDensityTexturePath);
+        material->specularTexture_id = _loadTexture(material->specularTexturePath);
+        material->bumpTexture_id = _loadTexture(material->bumpTexturePath);
+    }
+}
+
+void Scene::initGeometry()
+{
+    for (ShapeGroup & shapeGroup : shapeGroups) {
+        shapeGroup.triangles.initBuffers();
+    }
+}
+
 
 QVector3D Scene::lightPos() const
 {
@@ -284,115 +332,163 @@ QVector3D Scene::lightPos() const
 
 void Scene::setLightPos(const QVector3D& lightPos)
 {
-    _lightPos = lightPos;
+	_lightPos = lightPos;
 }
 
 BoundingBox Scene::boundingBox() const
 {
-    return _boundingBox;
+	return _boundingBox;
 }
 
-Scene::OBJ_ENUM Scene::getObjTokenByKeyword(const QString &keyword)
+void Scene::addShapeGroup(const QString& materialName)
 {
-    if (keyword == "#")
-        return OBJ_COMMENT;
-    if (keyword == "v")
-        return OBJ_VERTEX;
-
-
-    auto it = objTokensContainer.find(keyword);
-
-    if (it == objTokensContainer.end())
-        return OBJ_UNKNOWN;
-
-    return *it;
+	int id = shapeGroups.size();
+	_materialNames.insert(materialName, id);
+	shapeGroups.push_back(ShapeGroup());
 }
 
-Scene::MTL_ENUM Scene::getMtlTokenByKeyword(const QString &keyword)
+ShapeGroup* Scene::getShapeGroup(const QString& materialName)
 {
-    auto it = mtlTokensContainer.find(keyword);
+    return &shapeGroups[_materialNames[materialName]];
+}
 
-    if (it == mtlTokensContainer.end())
-        return MTL_UNKNOWN;
+void Scene::addTexture(QString path)
+{
+    if (_getTexImageByPath.contains(path))
+        return;
 
-    return *it;
+    QImage image(path);
+    if (image.isNull())
+        return;
+
+    _getTexImageByPath.insert(path, image);
+}
+
+Scene::OBJ_ENUM Scene::getObjTokenByKeyword(const QString& keyword)
+{
+	auto it = objTokensContainer.find(keyword);
+
+	if (it == objTokensContainer.end())
+		return OBJ_UNKNOWN;
+
+	return *it;
+}
+
+Scene::MTL_ENUM Scene::getMtlTokenByKeyword(const QString& keyword)
+{
+	auto it = mtlTokensContainer.find(keyword);
+
+	if (it == mtlTokensContainer.end())
+		return MTL_UNKNOWN;
+
+	return *it;
 }
 
 
-bool Scene::loadObj(const QString& path)
+Scene* Scene::loadObj(const QString& path, SceneStat* sceneStat)
 {
-    auto t = clock();
+    QFile file(path);
 
-    QFile _tin(path);
+	if (!file.open(QFile::ReadOnly | QFile::Text))
+		return nullptr;
 
-    if (!_tin.open(QFile::ReadOnly | QFile::Text))
-        return false;
+	auto* scene = new Scene();
+    scene->clear();
 
-    QTextStream tin(&_tin);
+    QTextStream tin(&file);
 
-    this->clear();
-
-	std::vector<QVector3D> v(1), vn(1);
+    std::vector<QVector3D> v(1), vn(1);
 	std::vector<QVector2D> vt(1);
 
-	int f_count = 0, v_count = 0;
+	ShapeGroup* currentShapeGroup = &scene->shapeGroups[0];
 
-	ShapeGroup* currentShapeGroup = &shapeGroups[0];
+    sceneStat->setTotalBytes(file.size());
 
-	int k = 0;
-	while (!tin.atEnd())
+    while (!tin.atEnd())
 	{
-		QString line = tin.readLine();
-		++k;
-		if (k % 100000 == 0)
-		{
-			qDebug() << k;
-			qDebug() << currentShapeGroup->triangles.verticies.size() << " " << currentShapeGroup->triangles.verticies.capacity();
-			qDebug() << currentShapeGroup->quads.verticies.size() << " " << currentShapeGroup->quads.verticies.capacity();
-		}
+        if (sceneStat->isCanceled())
+            break;
 
+        sceneStat->setReadBytes(file.pos());
 
-		//QVector<QStringRef> w = line.splitRef(QRegExp("(\\s)"), QString::SkipEmptyParts);
-        QVector<QStringRef> w = line.splitRef(" ", QString::SkipEmptyParts);
+        QString line = tin.readLine();
+		auto w = stringSplitBySpace(line);
 		if (w.empty())
 			continue;
 
-        OBJ_ENUM token; //= getObjTokenByKeyword(w[0].toString());
-        if (w[0] == "#")
-			token = OBJ_COMMENT;
-        else if (w[0] == "v" )
-		{
-			token = OBJ_VERTEX;
-		}
-		else 
-            token = getObjTokenByKeyword(w[0].toString());
+        OBJ_ENUM token = getObjTokenByKeyword(w[0].toString());
 
 		switch (token)
 		{
 		case OBJ_COMMENT:
 			break;
-		case OBJ_VERTEX:
-			v.push_back(QVector3D(w[1].toFloat(), w[2].toFloat(), w[3].toFloat()));
-            _boundingBox = BoundingBox(_boundingBox, v.back());
-			
-			++v_count;
-			break;
-		case OBJ_NORMAL:
-			vn.push_back(QVector3D(w[1].toFloat(), w[2].toFloat(), w[3].toFloat()));
-			break;
-		case OBJ_TEX_VERTEX:
-			vt.push_back(QVector2D(w[1].toFloat(), w[2].toFloat()));
-			break;
+        case OBJ_VERTEX:
+        {
+            QVector3D result;
+
+            if (w.size() >= 2)
+                result.setX(w[1].toFloat());
+            if (w.size() >= 3)
+                result.setY(w[2].toFloat());
+            if (w.size() >= 4)
+                result.setZ(w[3].toFloat());
+
+            v.push_back(result);
+            scene->_boundingBox = BoundingBox(scene->_boundingBox, result);
+
+            sceneStat->incVerticiesCount();
+            break;
+        }
+        case OBJ_NORMAL:
+        {
+            QVector3D result;
+
+            if (w.size() >= 2)
+                result.setX(w[1].toFloat());
+            if (w.size() >= 3)
+                result.setY(w[2].toFloat());
+            if (w.size() >= 4)
+                result.setZ(w[3].toFloat());
+
+            vn.push_back(result);
+
+            sceneStat->incNormalsCount();
+            break;
+        }
+        case OBJ_TEX_VERTEX:
+        {
+            QVector2D result;
+
+            if (w.size() >= 2)
+                result.setX(w[1].toFloat());
+            if (w.size() >= 3)
+                result.setY(w[2].toFloat());
+
+
+            vt.push_back(QVector2D(result));
+
+            sceneStat->incTexVerticiesCount();
+            break;
+        }
 		case OBJ_FACE:
-		{
-			++f_count;
+			{
+				sceneStat->incFacesCount();
 
-			if (w.size() - 1 == 3)
-			{ // triangle
-
-				for (int i = 1; i <= 3; ++i)
+				struct FormVertex
 				{
-					QVector<QStringRef> v_id = w[i].split("/");
+					int vertex_id, tex_id, normal_id;
+
+					FormVertex(int _vertex_id = 0, int _tex_id = 0, int _normal_id = 0) : vertex_id(_vertex_id), tex_id(_tex_id), normal_id(_normal_id)
+					{
+					}
+				};
+
+				QVector<FormVertex> formVerticies;
+
+				for (int i = 1; i < w.size(); ++i)
+				{
+                    QVector<QStringRef> v_id = w[i].split('/');
+
 					int vertex_id = v_id[0].toInt(),
 						tex_id = (v_id.size() >= 3) ? v_id[1].toInt() : 0,
 						normal_id = (v_id.size() >= 3) ? v_id[2].toInt() : 0;
@@ -404,90 +500,140 @@ bool Scene::loadObj(const QString& path)
 					if (normal_id < 0)
 						normal_id = int(vn.size()) + normal_id;
 
-					currentShapeGroup->triangles.verticies.push_back(v[vertex_id]);
-					currentShapeGroup->triangles.texverticies.push_back(vt[tex_id]);
-					currentShapeGroup->triangles.normals.push_back(vn[normal_id]);
+					formVerticies.push_back(FormVertex(vertex_id, tex_id, normal_id));
 				}
-			}
-			else if (w.size() - 1 == 4)
-			{ // quad
 
-				for (int i = 1; i <= 4; ++i)
+				if (formVerticies.size() < 3)
+					break;
+
+                // triangulation
+				for (int i = 2; i < formVerticies.size(); ++i)
 				{
-					QVector<QStringRef> v_id = w[i].split("/");
-					int vertex_id = v_id[0].toInt(),
-						tex_id = (v_id.size() >= 2) ? v_id[1].toInt() : 0,
-						normal_id = (v_id.size() >= 3) ? v_id[2].toInt() : 0;
+					int id[3] = {0, i - 1, i};
 
-					if (vertex_id < 0)
-						vertex_id = int(v.size()) + vertex_id;
-					if (tex_id < 0)
-						tex_id = int(vt.size()) + tex_id;
-					if (normal_id < 0)
-						normal_id = int(vn.size()) + normal_id;
+                    bool hasNormal = true;
 
-					currentShapeGroup->quads.verticies.push_back(v[vertex_id]);
-					currentShapeGroup->quads.texverticies.push_back(vt[tex_id]);
-					currentShapeGroup->quads.normals.push_back(vn[normal_id]);
+					for (int j = 0; j < 3; ++j)
+					{
+						int vertex_id = formVerticies[id[j]].vertex_id;
+						int tex_id = formVerticies[id[j]].tex_id;
+						int normal_id = formVerticies[id[j]].normal_id;
+
+                        if (normal_id == 0)
+                            hasNormal = false;
+
+						currentShapeGroup->triangles.verticies.push_back(v[vertex_id]);
+						currentShapeGroup->triangles.texverticies.push_back(vt[tex_id]);
+						currentShapeGroup->triangles.normals.push_back(vn[normal_id]);
+					}
+
+                    if (!hasNormal) {
+                        auto & verticies = currentShapeGroup->triangles.verticies;
+
+                        auto & v1 = verticies[verticies.size() - 1];
+                        auto & v2 = verticies[verticies.size() - 2];
+                        auto & v3 = verticies[verticies.size() - 3];
+
+                        QVector3D normal = QVector3D::crossProduct(v3 - v1, v2 - v1);
+                        normal.normalize();
+
+                        for (int i = verticies.size() - 3; i < (int)verticies.size(); ++i)
+                            currentShapeGroup->triangles.normals[i] = normal;
+                    }
 				}
-			}
-			else
-			{
-				qDebug() << "Warning! This parser supports only triangles and quads";
-			}
 
-			break;
-		}
-		case OBJ_GROUP:
-		case OBJ_OBJECT:
-		case OBJ_CALL:
-		case OBJ_SMOOTHING_GROUP:
-			break;
+				//            if (w.size() - 1 == 3)
+				//            { // triangle
+
+				//                for (int i = 1; i <= 3; ++i)
+				//                {
+				//                    QVector<QStringRef> v_id = w[i].split("/");
+				//                    int vertex_id = v_id[0].toInt(),
+				//                        tex_id = (v_id.size() >= 3) ? v_id[1].toInt() : 0,
+				//                        normal_id = (v_id.size() >= 3) ? v_id[2].toInt() : 0;
+
+				//                    if (vertex_id < 0)
+				//                        vertex_id = int(v.size()) + vertex_id;
+				//                    if (tex_id < 0)
+				//                        tex_id = int(vt.size()) + tex_id;
+				//                    if (normal_id < 0)
+				//                        normal_id = int(vn.size()) + normal_id;
+
+				//                    currentShapeGroup->triangles.verticies.push_back(v[vertex_id]);
+				//                    currentShapeGroup->triangles.texverticies.push_back(vt[tex_id]);
+				//                    currentShapeGroup->triangles.normals.push_back(vn[normal_id]);
+				//                }
+				//            }
+				//            else if (w.size() - 1 == 4)
+				//            { // quad
+
+				//                for (int i = 1; i <= 4; ++i)
+				//                {
+				//                    QVector<QStringRef> v_id = w[i].split("/");
+				//                    int vertex_id = v_id[0].toInt(),
+				//                        tex_id = (v_id.size() >= 2) ? v_id[1].toInt() : 0,
+				//                        normal_id = (v_id.size() >= 3) ? v_id[2].toInt() : 0;
+
+				//                    if (vertex_id < 0)
+				//                        vertex_id = int(v.size()) + vertex_id;
+				//                    if (tex_id < 0)
+				//                        tex_id = int(vt.size()) + tex_id;
+				//                    if (normal_id < 0)
+				//                        normal_id = int(vn.size()) + normal_id;
+
+				//                    currentShapeGroup->quads.verticies.push_back(v[vertex_id]);
+				//                    currentShapeGroup->quads.texverticies.push_back(vt[tex_id]);
+				//                    currentShapeGroup->quads.normals.push_back(vn[normal_id]);
+				//                }
+				//            }
+				//            else
+				//            {
+				//                qDebug() << "Warning! This parser supports only triangles and quads";
+				//            }
+
+				break;
+			}
 		case OBJ_MTLLIB:
-		{
-			QFileInfo currentFile(path);
-			QDir dir = currentFile.absoluteDir();
-
-			for (int i = 1; i < w.size(); ++i)
 			{
-				this->loadMaterialLibrary(dir.absoluteFilePath(w[i].toString()));
-			}
+				QFileInfo currentFile(path);
+				QDir dir = currentFile.absoluteDir();
 
-			currentShapeGroup = &shapeGroups[0];
-			break;
-		}
+				for (int i = 1; i < w.size(); ++i)
+				{
+					scene->loadMaterialLibrary(dir.absoluteFilePath(w[i].toString()), sceneStat);
+				}
+
+				currentShapeGroup = &scene->shapeGroups[0];
+				break;
+			}
 		case OBJ_USEMTL:
 			currentShapeGroup->triangles.shrink_to_fit();
 			currentShapeGroup->quads.shrink_to_fit();
 
-			currentShapeGroup = &shapeGroups[materialNames[w[1].toString()]];
+			currentShapeGroup = &scene->shapeGroups[scene->_materialNames[w[1].toString()]];
 			break;
 		default:
-            qDebug() << "Warning! Command not supported: " << w[0];
 			break;
 		}
 	}
 
-	qDebug() << "Loaded. Forms: " << f_count << ", verticies: " << v_count;
-	qDebug() << "Time: " << (1.0f * clock() - t) / CLOCKS_PER_SEC;
+    if (sceneStat->isCanceled()) {
+        delete scene;
+        scene = nullptr;
+    }
 
-    _lightPos = _boundingBox.maxPoint();
-	_lightPos.setY(_lightPos.y() * 2);
-
-	return true;
+	return scene;
 }
 
 void Scene::clear()
 {
 	shapeGroups.clear();
-	shapeGroups.push_back(ShapeGroup());
+	_materialNames.clear();
 
-	materialNames.clear();
-	materialNames.insert("", 0);
-	lastMaterialName = 0;
-	getTextureIdByPath.clear();
+	addShapeGroup(""); //add default shape group
+    _getTextureIdByPath.clear();
 
-    _boundingBox = BoundingBox();
+	_boundingBox = BoundingBox();
 }
 
 bool Scene::genCube()
@@ -523,13 +669,14 @@ bool Scene::genCube()
 	};
 
 
-	currentShapeGroup.material.diffuseTexture_id = loadTexture(":/tex/texture.jpg");
+    currentShapeGroup.material.diffuseTexturePath = ":/tex/texture.jpg";
+    addTexture(":/tex/texture.jpg");
 
 	for (int i = 0; i < 6; ++i)
 	{
 		for (int j = 0; j < 4; ++j)
 		{
-            _boundingBox = BoundingBox(_boundingBox, QVector3D(v[f[i][j]][0], v[f[i][j]][1], v[f[i][j]][2]));
+			_boundingBox = BoundingBox(_boundingBox, QVector3D(v[f[i][j]][0], v[f[i][j]][1], v[f[i][j]][2]));
 
 			currentShapeGroup.quads.verticies.push_back(v[f[i][j]]);
 			currentShapeGroup.quads.texverticies.push_back(vt[j]);
@@ -539,37 +686,59 @@ bool Scene::genCube()
 	return true;
 }
 
-GLuint Scene::loadTexture(QString path)
+GLuint Scene::_loadTexture(QString path)
 {
-    path = path.replace("\\", "/");
+    if (path.isEmpty())
+        return 0;
 
+    if (_getTextureIdByPath[path] != 0) {
+        return _getTextureIdByPath[path];
+    }
 
-	if (getTextureIdByPath[path] != 0)
-		return getTextureIdByPath[path];
+    QImage image = _getTexImageByPath[path];
 
-	QImage image(path);
+    if (image.isNull())
+    {
+        return 0;
+    }
 
-	if (image.isNull())
-	{
-		return 0;
-	}
+    auto tex = new QOpenGLTexture(image.mirrored());
+    tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    tex->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    tex->setMaximumAnisotropy(8.0);
 
-	auto tex = new QOpenGLTexture(image.mirrored());
-	tex->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-	tex->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
-	tex->setMaximumAnisotropy(16.0);
+    _oglTextures.insert(tex);
+    _getTextureIdByPath[path] = tex->textureId();
 
-	textures.insert(tex->textureId(), tex);
-	getTextureIdByPath[path] = tex->textureId();
-
-	return tex->textureId();
+    return tex->textureId();
 }
 
 Scene::~Scene()
 {
-    for (auto it : textures)
-    {
-        delete it;
-    }
+    for (auto it : _oglTextures)
+	{
+		delete it;
+	}
+}
+
+
+QVector<QStringRef> stringSplitBySpace(const QString& s)
+{
+	QVector<QStringRef> result;
+
+	for (int l = 0, r = 0; l < s.length(); ++l , r = std::max(l, r))
+	{
+		if (s[l].isSpace())
+			continue;
+
+		while (r < s.length() && !s[r].isSpace())
+			++r;
+
+		result.push_back(QStringRef(&s, l, r - l));
+
+		l = r - 1;
+	}
+
+	return result;
 }
 

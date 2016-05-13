@@ -4,19 +4,22 @@
 #include <QVector>
 #include <QVector3D>
 #include <QOpenGLTexture>
+#include <QSet>
 
 #include <QTextStream>
 
 #include "BoundingBox.h"
 #include "ShapeGroup.h"
 
-class Camera;
+#include "SceneStat.h"
+
+QVector<QStringRef> stringSplitBySpace(const QString& s);
 
 class Scene
 {
+public slots:
+	static Scene* loadObj(const QString& path, SceneStat* sceneStat = nullptr);
 public:
-    GLuint loadTexture(QString path);
-
 	QVector<ShapeGroup> shapeGroups;
 
 	Scene();
@@ -25,21 +28,30 @@ public:
 
 	void clear();
 	bool genCube();
-	bool loadObj(const QString& path);
-	bool loadMaterialLibrary(const QString& path);
+
+	bool loadMaterialLibrary(const QString& path, SceneStat* sceneStat = nullptr);
+	void initMaterials();
+    void initGeometry();
 
 	QVector3D lightPos() const;
 	void setLightPos(const QVector3D& lightPos);
-    BoundingBox boundingBox() const;
+	BoundingBox boundingBox() const;
 
 private:
-    QVector3D _lightPos;
-    BoundingBox _boundingBox;
+	QVector3D _lightPos;
+	BoundingBox _boundingBox;
 
-    QMap<QString, int> materialNames;
-    QMap<int, QOpenGLTexture *> textures;
-    QMap<QString, int> getTextureIdByPath;
-    int lastMaterialName = 0;
+	void addShapeGroup(const QString& materialName);
+	ShapeGroup* getShapeGroup(const QString& materialName);
+
+	QMap<QString, int> _materialNames;
+    QSet<QOpenGLTexture *> _oglTextures;
+    QMap<QString, int> _getTextureIdByPath;
+    QMap<QString, QImage> _getTexImageByPath;
+
+    void addTexture(QString path);
+	GLuint _loadTexture(QString path);
+
 
 	enum OBJ_ENUM
 	{
@@ -103,7 +115,7 @@ private:
 	};
 
 	static const QMap<QString, OBJ_ENUM> objTokensContainer;
-    static OBJ_ENUM getObjTokenByKeyword(const QString& keyword);
+	static OBJ_ENUM getObjTokenByKeyword(const QString& keyword);
 
 	enum MTL_ENUM
 	{
@@ -139,7 +151,7 @@ private:
 	};
 
 	static const QMap<QString, MTL_ENUM> mtlTokensContainer;
-    static MTL_ENUM getMtlTokenByKeyword(const QString& keyword);
+	static MTL_ENUM getMtlTokenByKeyword(const QString& keyword);
 };
 
 #endif // OBJECT3D_H

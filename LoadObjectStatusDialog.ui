@@ -26,21 +26,21 @@
    <string>Загрузка...</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="2">
+   <item row="3" column="2">
     <widget class="QLabel" name="label_7">
      <property name="text">
       <string>Нормали:</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="3" rowspan="2" colspan="2">
+   <item row="3" column="3" rowspan="2" colspan="2">
     <widget class="QLabel" name="normalsCount">
      <property name="text">
       <string>&lt;normalsСount&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="2" rowspan="2">
+   <item row="4" column="2" rowspan="2">
     <widget class="QLabel" name="label_8">
      <property name="text">
       <string>Текстурные координаты:</string>
@@ -50,91 +50,77 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Текущий файл:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QLabel" name="TexturesCount">
+   <item row="2" column="1">
+    <widget class="QLabel" name="texturesCount">
      <property name="text">
       <string>&lt;texturesCount&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="3" colspan="2">
-    <widget class="QLabel" name="verticiesCount">
-     <property name="text">
-      <string>&lt;verticiesCount&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="4">
+   <item row="0" column="0" colspan="4">
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
       <number>24</number>
      </property>
     </widget>
    </item>
-   <item row="1" column="4">
+   <item row="2" column="3" colspan="2">
+    <widget class="QLabel" name="verticiesCount">
+     <property name="text">
+      <string>&lt;verticiesCount&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
     <widget class="QPushButton" name="cancelButton">
      <property name="text">
       <string>Отмена</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
+   <item row="1" column="1">
     <widget class="QLabel" name="materialsCount">
      <property name="text">
       <string>&lt;materialsCount&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="6" column="3" colspan="2">
+   <item row="5" column="3" colspan="2">
     <widget class="QLabel" name="texCoordsCount">
      <property name="text">
       <string>&lt;texCoordsCount&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="2">
+   <item row="2" column="2">
     <widget class="QLabel" name="label_6">
      <property name="text">
       <string>Вершины:</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="1" colspan="4">
-    <widget class="QLabel" name="processingFile">
-     <property name="text">
-      <string>&lt;processing file&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
+   <item row="1" column="0">
     <widget class="QLabel" name="label_3">
      <property name="text">
       <string>Материалы:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="2">
+   <item row="1" column="2">
     <widget class="QLabel" name="label_5">
      <property name="text">
       <string>Полигоны:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="3" colspan="2">
-    <widget class="QLabel" name="PolygonsCount">
+   <item row="1" column="3" colspan="2">
+    <widget class="QLabel" name="facesCount">
      <property name="text">
       <string>&lt;polygonsCount&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="2" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
       <string>Текстуры:</string>

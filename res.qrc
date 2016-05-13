@@ -2,4 +2,7 @@
     <qresource prefix="/tex">
         <file>texture.jpg</file>
     </qresource>
+    <qresource prefix="/html">
+        <file>about.html</file>
+    </qresource>
 </RCC>

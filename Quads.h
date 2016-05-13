@@ -5,13 +5,15 @@
 #include <QVector3D>
 
 
-struct Quads {
+struct Quads
+{
 	std::vector<QVector3D> verticies, normals;
 	std::vector<QVector2D> texverticies;
 
 	Quads();
-    ~Quads();
+	~Quads();
 
 	void shrink_to_fit();
 	void clear();
 };
+

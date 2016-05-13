@@ -21,4 +21,7 @@ void Quads::clear()
 	texverticies.clear();
 }
 
-Quads::~Quads() {}
+Quads::~Quads()
+{
+}
+

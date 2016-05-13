@@ -3,7 +3,8 @@
 #include "Triangles.h"
 #include "Quads.h"
 
-struct ShapeGroup {
+struct ShapeGroup
+{
 	Triangles triangles;
 	Quads quads;
 
@@ -14,3 +15,4 @@ struct ShapeGroup {
 
 	void clear();
 };
+

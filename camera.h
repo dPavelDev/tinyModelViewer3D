@@ -7,7 +7,7 @@ class Camera
 {
 public:
 	Camera();
-	Camera(QVector3D eye, QVector3D center, QVector3D up, float fovy, float zNear, float zFar);
+	Camera(QVector3D eye, QVector3D center, QVector3D up, float fovy);
 
 	QVector3D eye() const;
 	void setEye(const QVector3D& eye);
@@ -64,9 +64,9 @@ public:
 	void moveDown(const float& dist);
 	void moveUp(const float& dist);
 
-    void alignUp();
+	void alignUp();
 private:
-    QVector3D _eye, _center, _up;
+	QVector3D _eye, _center, _up;
 	float _fovy = 45.0f, _zNear = 0.01f, _zFar = 100.0f;
 
 	bool _isFixedCenter = true;

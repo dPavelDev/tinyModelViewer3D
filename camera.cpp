@@ -3,19 +3,15 @@
 #endif
 
 #include <GL/glu.h> // for Camera::setGluLookAt (const quaternion) function
-
-
 #include "camera.h"
 
-Camera::Camera(QVector3D eye, QVector3D center, QVector3D up, float fovy, float zNear, float zFar)
+Camera::Camera(QVector3D eye, QVector3D center, QVector3D up, float fovy)
 {
 	_eye = eye;
 	_center = center;
 	_up = up;
 
 	_fovy = fovy;
-	_zNear = zNear;
-	_zFar = zFar;
 }
 
 Camera::Camera()
@@ -201,14 +197,14 @@ void Camera::moveDown(const float& dist)
 
 void Camera::moveUp(const float& dist)
 {
-    moveOnVector(up() * dist);
+	moveOnVector(up() * dist);
 }
 
 void Camera::alignUp()
 {
-    this->setUp(QVector3D(0, 1, 0));
-    auto left = QVector3D::crossProduct(this->up(), this->dir());
-    this->setUp(QVector3D::crossProduct(this->dir(), left));
+	this->setUp(QVector3D(0, 1, 0));
+	auto left = QVector3D::crossProduct(this->up(), this->dir());
+	this->setUp(QVector3D::crossProduct(this->dir(), left));
 }
 
 void Camera::turnUp(const float& angle)

@@ -1,7 +1,6 @@
 #include "ShapeGroup.h"
 
 
-
 ShapeGroup::ShapeGroup()
 {
 }
@@ -16,3 +15,4 @@ void ShapeGroup::clear()
 ShapeGroup::~ShapeGroup()
 {
 }
+

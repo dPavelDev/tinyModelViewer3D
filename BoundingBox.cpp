@@ -1,84 +1,86 @@
 ﻿#include "BoundingBox.h"
 
-BoundingBox::BoundingBox(QVector3D _min, QVector3D _max)
+using std::min;
+using std::max;
+
+BoundingBox::BoundingBox()
 {
-	_minPoint = _min;
-	_maxPoint = _max;
+    _minPoint = QVector3D(INFINITY, INFINITY, INFINITY);
+    _maxPoint = QVector3D(-INFINITY, -INFINITY, -INFINITY);
 }
 
-BoundingBox::BoundingBox(const BoundingBox& a, const BoundingBox& b)
+BoundingBox::BoundingBox(const QVector3D &minPoint, const QVector3D &maxPoint)
 {
-	using std::min;
-	using std::max;
-
-	_minPoint = QVector3D(
-		min(a._minPoint.x(), b._minPoint.x()),
-		min(a._minPoint.y(), b._minPoint.y()),
-		min(a._minPoint.z(), b._minPoint.z())
-	);
-
-	_maxPoint = QVector3D(
-		max(a._maxPoint.x(), b._maxPoint.x()),
-		max(a._maxPoint.y(), b._maxPoint.y()),
-		max(a._maxPoint.z(), b._maxPoint.z())
-	);
+    _minPoint = minPoint;
+    _maxPoint = maxPoint;
 }
 
-BoundingBox::BoundingBox(const BoundingBox& a, const QVector3D& point)
+BoundingBox::BoundingBox(const BoundingBox& box1, const BoundingBox& box2)
 {
-	using std::min;
-	using std::max;
+    _minPoint = QVector3D(
+                min(box1._minPoint.x(), box2._minPoint.x()),
+                min(box1._minPoint.y(), box2._minPoint.y()),
+                min(box1._minPoint.z(), box2._minPoint.z())
+                );
 
-	_minPoint = QVector3D(
-		min(a._minPoint.x(), point.x()),
-		min(a._minPoint.y(), point.y()),
-		min(a._minPoint.z(), point.z())
-	);
+    _maxPoint = QVector3D(
+                max(box1._maxPoint.x(), box2._maxPoint.x()),
+                max(box1._maxPoint.y(), box2._maxPoint.y()),
+                max(box1._maxPoint.z(), box2._maxPoint.z())
+                );
+}
+
+BoundingBox::BoundingBox(const BoundingBox& box, const QVector3D& point)
+{
+    _minPoint = QVector3D(
+                min(box._minPoint.x(), point.x()),
+                min(box._minPoint.y(), point.y()),
+                min(box._minPoint.z(), point.z())
+                );
 
 
-	_maxPoint = QVector3D(
-		max(a._maxPoint.x(), point.x()),
-		max(a._maxPoint.y(), point.y()),
-		max(a._maxPoint.z(), point.z())
-	);
+    _maxPoint = QVector3D(
+                max(box._maxPoint.x(), point.x()),
+                max(box._maxPoint.y(), point.y()),
+                max(box._maxPoint.z(), point.z())
+                );
 }
 
 QVector3D BoundingBox::minPoint() const
 {
-	return _minPoint;
+    return _minPoint;
 }
 
 QVector3D BoundingBox::maxPoint() const
 {
-	return _maxPoint;
+    return _maxPoint;
 }
 
 QVector3D BoundingBox::center() const
 {
-	return (_minPoint + _maxPoint) / 2;
+    return (_minPoint + _maxPoint) / 2;
 }
 
-QVector3D BoundingBox::dim() const
+QVector3D BoundingBox::dimensions() const
 {
-	return _maxPoint - _minPoint;
+    return _maxPoint - _minPoint;
 }
 
 float BoundingBox::volume() const
 {
-	auto d = this->dim();
-	return d.x() * d.y() * d.z();
+    auto d = this->dimensions();
+    return d.x() * d.y() * d.z();
 }
 
-float BoundingBox::max_dim() const
+float BoundingBox::maxDimensionSize() const
 {
-	using std::max;
-	auto d = this->dim();
+    auto d = this->dimensions();
 
-	return max(d.x(), max(d.y(), d.z()));
+    return max(d.x(), max(d.y(), d.z()));
 }
 
 bool BoundingBox::isValid() const
 {
-	return _minPoint.x() <= _maxPoint.x() && _minPoint.y() <= _maxPoint.y() && _minPoint.z() <= _maxPoint.z();
+    return _minPoint.x() <= _maxPoint.x() && _minPoint.y() <= _maxPoint.y() && _minPoint.z() <= _maxPoint.z();
 }
 

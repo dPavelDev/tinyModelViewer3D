@@ -1,46 +1,46 @@
-#ifndef LOADOBJECTSTATUSDIALOG_H
-#define LOADOBJECTSTATUSDIALOG_H
+#pragma once
 
 #include <QBasicTimer>
 #include <QDialog>
 #include <QFuture>
 #include "SceneStat.h"
-#include "scene.h"
+#include "Scene.h"
 
 #include <QCloseEvent>
 
 namespace Ui
 {
-	class LoadObjectStatusDialog;
+class LoadObjectStatusDialog;
 }
 
 class LoadObjectStatusDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit LoadObjectStatusDialog(QWidget* parent, Scene** resultScene, const QString& path);
-	~LoadObjectStatusDialog();
+    ~LoadObjectStatusDialog();
 
-	void setSceneStat(SceneStat* value);
-
+    void setSceneStat(SceneStat* value);
 protected:
-	void timerEvent(QTimerEvent*) override;
+    void timerEvent(QTimerEvent*) override;
     void closeEvent(QCloseEvent * e);
 
 private slots:
-	void on_cancelButton_clicked();
+    void on_cancelButton_clicked();
 
 private:
     Ui::LoadObjectStatusDialog* ui = nullptr;
 
+    QString _path;
     SceneStat* sceneStat = nullptr;
-	QFuture<Scene*> f;
+    QFuture<Scene*> f;
     Scene** _resultScene = nullptr;
 
-	QBasicTimer _timer;
+    QBasicTimer _timer;
+
+    bool _isStartLoading = false;
+
+    void _startLoading();
+    void _stopLoading();
 };
-
-#endif // LOADOBJECTSTATUSDIALOG_H
-
-

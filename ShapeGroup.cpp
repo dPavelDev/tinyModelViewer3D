@@ -3,13 +3,14 @@
 
 ShapeGroup::ShapeGroup()
 {
+    //clear();
 }
 
 void ShapeGroup::clear()
 {
-	triangles.clear();
-	quads.clear();
-	material = Material();
+    triangles.clear();
+    quads.clear();
+    material = Material();
 }
 
 ShapeGroup::~ShapeGroup()

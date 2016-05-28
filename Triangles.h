@@ -7,16 +7,16 @@
 
 struct Triangles
 {
-	std::vector<QVector3D> verticies, normals;
-	std::vector<QVector2D> texverticies;
+    std::vector<QVector3D> verticies, normals;
+    std::vector<QVector2D> texverticies;
 
     QOpenGLBuffer verticiesBuffer, normalsBuffer, texverticiesBuffer;
 
-	Triangles();
-	~Triangles();
+    Triangles();
+    ~Triangles();
 
-	void shrink_to_fit();
-	void clear();
+    void shrink_to_fit();
+    void clear();
     void initBuffers();
     void releaseBuffers();
 };

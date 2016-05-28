@@ -6,102 +6,102 @@ SceneStat::SceneStat()
 
 int SceneStat::materialsCount() const
 {
-	return _materialsCount;
+    return _materialsCount;
 }
 
 void SceneStat::setMaterialsCount(int materialsCount)
 {
-	_materialsCount = materialsCount;
+    _materialsCount = materialsCount;
 }
 
 void SceneStat::incMaterialsCount(int materialsCount)
 {
-	_materialsCount += materialsCount;
+    _materialsCount += materialsCount;
 }
 
 int SceneStat::texturesCount() const
 {
-	return _texturesCount;
+    return _texturesCount;
 }
 
 void SceneStat::setTexturesCount(int texturesCount)
 {
-	_texturesCount = texturesCount;
+    _texturesCount = texturesCount;
 }
 
 void SceneStat::incTexturesCount(int texturesCount)
 {
-	_texturesCount += texturesCount;
+    _texturesCount += texturesCount;
 }
 
 int SceneStat::verticiesCount() const
 {
-	return _verticiesCount;
+    return _verticiesCount;
 }
 
 void SceneStat::setVerticiesCount(int verticiesCount)
 {
-	_verticiesCount = verticiesCount;
+    _verticiesCount = verticiesCount;
 }
 
 void SceneStat::incVerticiesCount(int verticiesCount)
 {
-	_verticiesCount += verticiesCount;
+    _verticiesCount += verticiesCount;
 }
 
 int SceneStat::texVerticiesCount() const
 {
-	return _texVerticiesCount;
+    return _texVerticiesCount;
 }
 
 void SceneStat::setTexVerticiesCount(int texVerticiesCount)
 {
-	_texVerticiesCount = texVerticiesCount;
+    _texVerticiesCount = texVerticiesCount;
 }
 
 void SceneStat::incTexVerticiesCount(int texVerticiesCount)
 {
-	_texVerticiesCount += texVerticiesCount;
+    _texVerticiesCount += texVerticiesCount;
 }
 
 int SceneStat::normalsCount() const
 {
-	return _normalsCount;
+    return _normalsCount;
 }
 
 void SceneStat::setNormalsCount(int normalsCount)
 {
-	_normalsCount = normalsCount;
+    _normalsCount = normalsCount;
 }
 
 void SceneStat::incNormalsCount(int normalsCount)
 {
-	_normalsCount += normalsCount;
+    _normalsCount += normalsCount;
 }
 
 int SceneStat::facesCount() const
 {
-	return _facesCount;
+    return _facesCount;
 }
 
 void SceneStat::setFacesCount(int facesCount)
 {
-	_facesCount = facesCount;
+    _facesCount = facesCount;
 }
 
 void SceneStat::incFacesCount(int facesCount)
 {
-	_facesCount += facesCount;
+    _facesCount += facesCount;
 }
 
 bool SceneStat::freeFormDetected() const
 {
-	return _freeFormDetected;
+    return _freeFormDetected;
 }
 
 void SceneStat::setFreeFormDetected(bool freeFormDetected)
 {
-	_freeFormDetected = freeFormDetected;
+    _freeFormDetected = freeFormDetected;
 }
 
 bool SceneStat::isLoaded() const

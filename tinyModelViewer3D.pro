@@ -15,33 +15,42 @@ TARGET = tinyModelViewer3D
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    renderwidget.cpp \
-    camera.cpp \
-    scene.cpp \
-    material.cpp \
+SOURCES +=\
     BoundingBox.cpp \
     Quads.cpp \
     ShapeGroup.cpp \
     Triangles.cpp \
     LoadObjectStatusDialog.cpp \
-    SceneStat.cpp
+    SceneStat.cpp \
+    Camera.cpp \
+    MainWindow.cpp \
+    Material.cpp \
+    RenderWidget.cpp \
+    Scene.cpp \
+    StringUtilities.cpp \
+    ObjReader.cpp \
+    Texture.cpp \
+    Main.cpp
 
-HEADERS  += mainwindow.h \
-    renderwidget.h \
-    camera.h \
-    scene.h \
-    material.h \
+HEADERS  += \
     BoundingBox.h \
     Quads.h \
     ShapeGroup.h \
     Triangles.h \
     LoadObjectStatusDialog.h \
-    SceneStat.h
+    SceneStat.h \
+    Camera.h \
+    MainWindow.h \
+    Material.h \
+    RenderWidget.h \
+    Scene.h \
+    StringUtilities.h \
+    ObjReader.h \
+    Texture.h
 
-FORMS    += mainwindow.ui \
-    LoadObjectStatusDialog.ui
+FORMS    += \
+    LoadObjectStatusDialog.ui \
+    MainWindow.ui
 
 RESOURCES += \
     res.qrc

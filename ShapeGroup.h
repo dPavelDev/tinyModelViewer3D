@@ -1,18 +1,19 @@
 #pragma once
-#include "material.h"
+
+#include "Material.h"
 #include "Triangles.h"
 #include "Quads.h"
 
 struct ShapeGroup
 {
-	Triangles triangles;
-	Quads quads;
+    Triangles triangles;
+    Quads quads;
 
-	Material material;
+    Material material;
 
-	ShapeGroup();
-	~ShapeGroup();
+    ShapeGroup();
+    ~ShapeGroup();
 
-	void clear();
+    void clear();
 };
 

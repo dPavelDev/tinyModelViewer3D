@@ -4,16 +4,16 @@
 
 void Triangles::shrink_to_fit()
 {
-	verticies.shrink_to_fit();
-	normals.shrink_to_fit();
-	texverticies.shrink_to_fit();
+    verticies.shrink_to_fit();
+    normals.shrink_to_fit();
+    texverticies.shrink_to_fit();
 }
 
 void Triangles::clear()
 {
-	verticies.clear();
-	normals.clear();
-	texverticies.clear();
+    verticies.clear();
+    normals.clear();
+    texverticies.clear();
 
     releaseBuffers();
 }
@@ -41,9 +41,9 @@ void Triangles::initBuffers()
 
 Triangles::Triangles()
 {
-	verticies.clear();
-	normals.clear();
-	texverticies.clear();
+    verticies.clear();
+    normals.clear();
+    texverticies.clear();
 }
 
 Triangles::~Triangles()
